@@ -97,3 +97,38 @@ fn format_line(line: &str, lineno: usize, range: Range<usize>) -> String {
         &line[end..]
     )
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn format_line_should_work() {
+        let result = format_line("Hello, Wei~", 1000, 7..10);
+        let expected = format!(
+            "{0: >6}:{1: <3} Hello, {2}~",
+            "1000".blue(), 
+            "8".cyan(), 
+            "Wei".red()
+        );
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn default_strategy_should_work() {
+        let path = Path::new("src/main.rs");
+        let input = b"hello world!\nhey Wei!";
+        let reader = BufReader::new(&input[..]);
+        let pattern = Regex::new(r"he\w+").unwrap();
+        let mut writer = Vec::new();
+        default_strategy(path, reader, &pattern, &mut writer).unwrap();
+        let result = String::from_utf8(writer).unwrap();
+        let expected = [
+            String::from("src/main.rs"),
+            format_line("hello world!", 1, 0..5),
+            format_line("hey Wei!\n", 2, 0..3),
+        ];
+
+        assert_eq!(result, expected.join("\n"));
+    }
+}
